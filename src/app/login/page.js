@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import Logo from "../assets/logo.png";
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { loginUser } from '../redux/auth/authSlice';
@@ -29,7 +28,7 @@ function Login() {
     return (
         <>
             <div className='flex justify-center items-center pt-10'>
-                <Image src={Logo} alt='Logo' width={45} height={45} priority />
+                <Image src="/assets/logo.png" alt='Logo' width={45} height={45} priority />
                 <span className='font-semibold text-lg ps-5 text-black'>SocioSphere</span>
             </div>
             <div className='flex justify-center pt-24'>

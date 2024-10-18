@@ -1,13 +1,12 @@
 import React from 'react'
 import Image from 'next/image'
-import Logo from "../assets/logo.png"
 import { RiUser3Line } from "react-icons/ri";
 
 function Navbar() {
     return (
-        <div className="navbar bg-base-100 pt-3 pb-3 flex justify-between items-center">
+        <div className="navbar bg-base-100 pt-3 pb-3 flex justify-between items-center border">
             <div className="navbar-start flex items-center ms-16">
-                <Image src={Logo} alt="Logo" width={50} />
+                <Image src="/assets/logo.png" alt="Logo" width={50} height={50} />
                 <span className="font-bold text-lg ms-1">Socio Sphere</span>
             </div>
             <div className="navbar-center flex-grow mx-4 w-3/6">
