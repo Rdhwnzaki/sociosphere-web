@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { toast } from 'react-hot-toast';
 
 const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 axios.defaults.withCredentials = true;
@@ -29,9 +30,14 @@ export const loginUser = async (email, password) => {
         const token = response.data.access_token
         sessionStorage.setItem('user', JSON.stringify(user))
         sessionStorage.setItem('token', token)
+        toast.success('Login successfully!');
         return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || error.message);
+        if (error.response.status === 422) {
+            toast.error("The form cannot be empty")
+        } else if (error.response.status === 401) {
+            toast.error("Email and password do not match")
+        }
     }
 };
 
@@ -41,25 +47,29 @@ export const registerUser = createAsyncThunk(
     async (userData, { rejectWithValue }) => {
         try {
             const response = await axios.post(`${baseURL}/api/register`, userData);
+            toast.success('Registration successfully!');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response ? error.response.data : 'Registration failed');
+            toast.error(error.response ? error.response.message : 'Registration failed');
+            return rejectWithValue(error.response ? error.response.message : 'Registration failed');
         }
     }
 );
 
-export const logoutUser = async () => {
+export const logoutUser = async (token) => {
     try {
         await getCsrfToken();
         await axios.post(`${baseURL}/api/logout`, {}, {
             headers: {
                 'Content-Type': 'application/json',
+                "Authorization": `Bearer ${token}`
             },
         });
         sessionStorage.removeItem('user');
         sessionStorage.removeItem('token');
+        toast.success("Logout successfully!")
     } catch (error) {
-        console.error('Failed to logout:', error);
-        throw new Error(error.response?.data?.message || error.message);
+        toast.error(error.response ? error.response.message : 'Logout failed')
+        return rejectWithValue(error.response ? error.response.message : 'Logout failed');
     }
 };

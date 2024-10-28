@@ -16,11 +16,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getAllPosts } from '../redux/posts/postsSlice';
 import EachUtils from '../utils/EachUtils';
 import moment from "moment"
+import { createPosts } from '../redux/posts/postsSlice';
 
 function Feed() {
     const [authUser, setAuthUser] = useState()
     const dispatch = useDispatch()
     const { posts, loading, error } = useSelector((state) => state.posts);
+    const [desc, setDesc] = useState("")
+    const [dataPosts, setDataPosts] = useState([])
 
     useEffect(() => {
         document.title = "Socio Sphere | Feed";
@@ -30,6 +33,25 @@ function Feed() {
 
         dispatch(getAllPosts())
     }, [dispatch])
+
+    const handlePost = async () => {
+        const token = sessionStorage.getItem("token")
+        try {
+            if (token && desc !== "") {
+                await dispatch(createPosts({ description: desc, token: token })).unwrap()
+                setDesc("")
+            }
+        } catch (error) {
+            console.error('Create post failed');
+        }
+
+    }
+
+    useEffect(() => {
+        if (posts) {
+            setDataPosts(posts)
+        }
+    }, [posts])
 
     return (
         <>
@@ -57,7 +79,7 @@ function Feed() {
                         </div>
                     </div>
                     <div className="card-body text-left w-full">
-                        <h2 className="card-title font-medium">{authUser?.username ?? "-"}</h2>
+                        <h2 className="card-title font-medium">{authUser?.username ?? ""}</h2>
                         <p>{authUser?.bio ?? "-"}</p>
                         <div className='divide-y divide-slate-200 mt-5'>
                             <div className='flex items-center cursor-pointer hover:text-cyan-500 py-2'>
@@ -93,7 +115,9 @@ function Feed() {
                                         />
                                     </div>
                                 </div>
-                                <input type="text" placeholder="What's on your mind?" className="input input-bordered w-full max-w-5xl ms-5" />
+                                <input type="text" placeholder="What's on your mind?" className="input input-bordered w-full max-w-5xl ms-5" value={desc} onChange={(e) => {
+                                    setDesc(e.target.value)
+                                }} />
                             </div>
                             <div className='flex justify-between mt-3 items-center'>
                                 <div className='ms-20'>
@@ -103,13 +127,18 @@ function Feed() {
                                     </div>
                                 </div>
                                 <div>
-                                    <button className="btn bg-cyan-500 hover:bg-cyan-700 text-white rounded-badge px-6 text-md">Post</button>
+                                    <button className="btn bg-cyan-500 hover:bg-cyan-700 text-white rounded-badge px-6 text-md" onClick={handlePost}>Post</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {posts.length > 0 ? (
-                        <EachUtils of={posts} render={post => <div className="card bg-base-100 shadow-sm mt-10 rounded-md border mb-10">
+                    {loading ? (
+                        <div className='text-center mt-5'>
+                            <span className="loading loading-dots loading-lg text-neutral"></span>
+                        </div>
+                    ) : null}
+                    {dataPosts.length > 0 ? (
+                        <EachUtils of={dataPosts} render={post => <div className="card bg-base-100 shadow-sm mt-10 rounded-md border mb-10">
                             <div className="card-body">
                                 <div className='flex justify-between border-b-2 pb-8'>
                                     <div className='flex items-center'>
@@ -124,8 +153,8 @@ function Feed() {
                                             </div>
                                         </div>
                                         <div className='ms-5'>
-                                            <p className='font-medium text-lg'>{post.user.username}</p>
-                                            <p className='text-sm text-slate-500'>{post.user.bio}</p>
+                                            <p className='font-medium text-lg'>{post?.user?.username}</p>
+                                            <p className='text-sm text-slate-500'>{post?.user?.bio}</p>
                                         </div>
                                     </div>
                                     <div className='flex items-end flex-col'>
@@ -143,12 +172,19 @@ function Feed() {
                                     <p className='text-justify'>{post.description}</p>
                                 </div>
                                 <div className='flex justify-between mt-16'>
-                                    <div className='flex items-center text-slate-500'>
+                                    <div className='flex flex-col text-slate-500'>
                                         <IoChatbubbleOutline className='text-xl' />
-                                        <p className='text-md ms-3'>Comments</p>
+                                        {/* <div className='flex items-center mt-3'>
+                                            <p>{post.comments.length}</p>
+                                            <p className='text-md ms-3'>Comments</p>
+                                        </div> */}
                                     </div>
-                                    <div className='text-slate-500'>
-                                        <AiOutlineLike className='text-2xl' />
+                                    <div className='flex flex-col text-slate-500'>
+                                        <AiOutlineLike className='text-2xl ms-8' />
+                                        {/* <div className='flex items-center mt-3'>
+                                            <p>{post.likes}</p>
+                                            <p className='text-md ms-3'>Likes</p>
+                                        </div> */}
                                     </div>
                                 </div>
                                 <div className='flex items-center mt-16 mb-10'>
@@ -164,7 +200,7 @@ function Feed() {
                                     </div>
                                     <input type="text" placeholder="Share your thoughts here..." className="input input-bordered w-full max-w-5xl ms-5" />
                                 </div>
-                                {post.comments.length > 0 ? (
+                                {post.comments ? (
                                     <EachUtils of={post.comments} render={comment => <div>
                                         <div className='bg-slate-200 rounded-lg mt-5 pb-5 border'>
                                             <div className='flex justify-between m-5'>

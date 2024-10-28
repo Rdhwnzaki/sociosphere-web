@@ -1,8 +1,22 @@
 import React from 'react'
 import Image from 'next/image'
-import { RiUser3Line } from "react-icons/ri";
+import { useDispatch } from 'react-redux'
+import { useRouter } from 'next/navigation'
+import { logoutUser } from '../redux/auth/authSlice'
 
 function Navbar() {
+    const dispatch = useDispatch()
+    const router = useRouter()
+
+    const handleLogout = async () => {
+        const token = sessionStorage.getItem("token")
+        if (token) {
+            await dispatch(logoutUser({ token: token })).unwrap()
+            setTimeout(() => {
+                router.push('/login');
+            }, 2000);
+        }
+    }
     return (
         <div className="navbar bg-base-100 pt-3 pb-3 flex justify-between items-center border">
             <div className="navbar-start flex items-center ms-16">
@@ -25,8 +39,7 @@ function Navbar() {
                 </label>
             </div>
             <div className="navbar-end flex items-center me-16">
-                <span className="font-normal text-sm me-5 cursor-pointer">Logout</span>
-                <RiUser3Line className="text-xl cursor-pointer" />
+                <span className="font-normal text-sm me-5 cursor-pointer" onClick={handleLogout}>Logout</span>
             </div>
         </div>
     )

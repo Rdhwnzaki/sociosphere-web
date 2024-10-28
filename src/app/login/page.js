@@ -15,7 +15,9 @@ function Login() {
     const handleLogin = async () => {
         try {
             await dispatch(loginUser({ email, password })).unwrap();
-            router.push('/feed');
+            setTimeout(() => {
+                router.push('/feed');
+            }, 2000);
         } catch (error) {
             console.error('Login failed:', error);
         }

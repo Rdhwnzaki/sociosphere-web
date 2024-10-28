@@ -22,16 +22,12 @@ function Register() {
             toast.error('Passwords do not match');
             return;
         }
-
         try {
             await dispatch(registerUser({ username, email, password, password_confirmation: confirmedPass })).unwrap();
-            toast.success('Registration successful!');
             setTimeout(() => {
                 router.push('/login');
             }, 2000);
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Failed to register';
-            toast.error(errorMessage);
             console.error('Failed to register:', err);
         }
     };
