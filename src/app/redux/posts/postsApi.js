@@ -12,21 +12,20 @@ export const getAllPosts = async () => {
     }
 };
 
-export const createPosts = async (description, token) => {
+export const createPosts = async (formData, token) => {
     try {
-        const response = await axios.post(`${baseURL}/api/posts`, {
-            description,
-        }, {
+        const response = await axios.post(`${baseURL}/api/posts`, formData, {
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'multipart/form-data',
                 'Authorization': `Bearer ${token}`
             }
-        })
-        toast.success(response.data.message)
+        });
+        toast.success(response.data.message);
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        return response.data
+        return response.data;
     } catch (error) {
-        console.log(error);
-        toast.error(error.response?.data?.message || 'Something went wrong')
+        console.error(error);
+        toast.error(error.response?.data?.message || 'Something went wrong');
+        throw error;  // Optional: rethrow to handle in calling function if needed
     }
-}
+};

@@ -24,6 +24,8 @@ function Feed() {
     const { posts, loading, error } = useSelector((state) => state.posts);
     const [desc, setDesc] = useState("")
     const [dataPosts, setDataPosts] = useState([])
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         document.title = "Socio Sphere | Feed";
@@ -35,23 +37,45 @@ function Feed() {
     }, [dispatch])
 
     const handlePost = async () => {
-        const token = sessionStorage.getItem("token")
+        const token = sessionStorage.getItem("token");
         try {
             if (token && desc !== "") {
-                await dispatch(createPosts({ description: desc, token: token })).unwrap()
-                setDesc("")
+                await dispatch(
+                    createPosts({
+                        description: desc,
+                        token: token,
+                        image: selectedImage,
+                    })
+                ).unwrap();
+                setDesc("");
+                setSelectedImage(null);
             }
         } catch (error) {
-            console.error('Create post failed');
+            console.error('Create post failed', error);
         }
+    };
 
-    }
 
     useEffect(() => {
         if (posts) {
             setDataPosts(posts)
         }
     }, [posts])
+
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setSelectedImage(file);
+        }
+    };
+
+    const handleImageClick = () => {
+        setIsOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsOpen(false);
+    };
 
     return (
         <>
@@ -122,9 +146,22 @@ function Feed() {
                             <div className='flex justify-between mt-3 items-center'>
                                 <div className='ms-20'>
                                     <div className='flex items-center cursor-pointer hover:text-cyan-500 pt-1'>
-                                        <IoMdImages className='text-xl' />
-                                        <p className='py-1 ms-2'>Add Media</p>
+                                        <label htmlFor="avatarUpload" className='flex items-center cursor-pointer'>
+                                            <IoMdImages className='text-xl' />
+                                            <p className='py-1 ms-2'>Add Media</p>
+                                            <input
+                                                id="avatarUpload"
+                                                type="file"
+                                                className="hidden"
+                                                onChange={handleImageChange}
+                                            />
+                                        </label>
                                     </div>
+                                    {selectedImage && (
+                                        <div className='mt-4'>
+                                            <p>Selected file: {selectedImage.name}</p>
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <button className="btn bg-cyan-500 hover:bg-cyan-700 text-white rounded-badge px-6 text-md" onClick={handlePost}>Post</button>
@@ -158,33 +195,68 @@ function Feed() {
                                         </div>
                                     </div>
                                     <div className='flex items-end flex-col'>
-                                        <div className="dropdown">
-                                            <BsThreeDots tabIndex={0} role="button" className="mb-4" />
-                                            <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-28 p-2 shadow">
-                                                <li><a><MdOutlineEdit className='text-xl' />Edit</a></li>
-                                                <li><a><RiDeleteBin5Line className='text-xl' />Delete</a></li>
-                                            </ul>
-                                        </div>
-                                        <p className='text-sm text-slate-500'>{moment(post.created_at).toNow()}</p>
+                                        {authUser?.id === post?.user?.id ? (
+                                            <div className="dropdown dropdown-top dropdown-end">
+                                                <BsThreeDots tabIndex={0} role="button" className="mb-4" />
+                                                <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-28 p-2 shadow">
+                                                    <li><a><MdOutlineEdit className='text-xl' />Edit</a></li>
+                                                    <li><a><RiDeleteBin5Line className='text-xl' />Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        ) : null}
+                                        <p className={authUser?.id === post?.user?.id ? 'text-sm text-slate-500' : 'text-sm text-slate-500 mt-8'}>{moment(post.created_at).toNow()}</p>
                                     </div>
                                 </div>
                                 <div className='mt-5'>
                                     <p className='text-justify'>{post.description}</p>
+                                    {post.image ? (
+                                        <div className="flex justify-start items-center mt-10">
+                                            <Image
+                                                alt="imagePost"
+                                                src={post.image}
+                                                width={300}
+                                                height={300}
+                                                className="rounded-lg shadow-md object-cover transition-transform duration-200 hover:scale-105 cursor-pointer"
+                                                onClick={handleImageClick}
+                                            />
+
+                                            {isOpen && (
+                                                <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-75 z-50">
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={handleCloseModal}
+                                                            className="absolute top-0 right-0 m-4 text-white text-2xl"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                        <Image
+                                                            alt="imagePost Enlarged"
+                                                            src={post.image}
+                                                            layout="responsive"
+                                                            width={700}
+                                                            height={700}
+                                                            className="rounded-lg shadow-md object-contain max-h-[90vh] max-w-[90vw]"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : null}
                                 </div>
-                                <div className='flex justify-between mt-16'>
-                                    <div className='flex flex-col text-slate-500'>
-                                        <IoChatbubbleOutline className='text-xl' />
-                                        {/* <div className='flex items-center mt-3'>
-                                            <p>{post.comments.length}</p>
-                                            <p className='text-md ms-3'>Comments</p>
-                                        </div> */}
+                                <div className="flex justify-between mt-16 p-4 border-t border-gray-200">
+                                    <div className="flex flex-col items-center text-slate-500">
+                                        <IoChatbubbleOutline className="text-2xl mb-1" />
+                                        <div className="flex items-center">
+                                            <p className="text-lg font-semibold">{post.comments.length}</p>
+                                            <p className="text-sm ms-2">Comments</p>
+                                        </div>
                                     </div>
-                                    <div className='flex flex-col text-slate-500'>
-                                        <AiOutlineLike className='text-2xl ms-8' />
-                                        {/* <div className='flex items-center mt-3'>
-                                            <p>{post.likes}</p>
-                                            <p className='text-md ms-3'>Likes</p>
-                                        </div> */}
+                                    <div className="flex flex-col items-center text-slate-500">
+                                        <AiOutlineLike className="text-2xl mb-1" />
+                                        <div className="flex items-center">
+                                            <p className="text-lg font-semibold">{post.likes}</p>
+                                            <p className="text-sm ms-2">Likes</p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className='flex items-center mt-16 mb-10'>
@@ -373,7 +445,7 @@ function Feed() {
                     </div>
                     <p className='text-left ms-7 mt-5 text-slate-500'>© 2024 Rdhwnzaki. All rights reserved.</p>
                 </div>
-            </div>
+            </div >
         </>
     )
 }

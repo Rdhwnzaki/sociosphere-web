@@ -16,14 +16,24 @@ export const getAllPosts = createAsyncThunk('posts/getAllPosts', async (_, { rej
     }
 });
 
-export const createPosts = createAsyncThunk('posts/createPosts', async ({ description, token }, { rejectWithValue }) => {
-    try {
-        const response = await apiCreatePosts(description, token);
-        return response;
-    } catch (error) {
-        return rejectWithValue(error.message);
+export const createPosts = createAsyncThunk(
+    'posts/createPosts',
+    async ({ description, token, image }, { rejectWithValue }) => {
+        try {
+            const formData = new FormData();
+            formData.append('description', description);
+            if (image) {
+                formData.append('image', image);
+            }
+            console.log(formData, token, "ini");
+
+            const response = await apiCreatePosts(formData, token);
+            return response;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Something went wrong');
+        }
     }
-});
+);
 
 const postsSlice = createSlice({
     name: 'posts',
