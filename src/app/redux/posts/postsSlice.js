@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getAllPosts as apiGetAllPosts, createPosts as apiCreatePosts } from './postsApi';
+import { getAllPosts as apiGetAllPosts, createPosts as apiCreatePosts, createComments as apiCreateComments, deletePosts as apiDeletePosts } from './postsApi';
 
 const initialState = {
     posts: [],
@@ -34,6 +34,27 @@ export const createPosts = createAsyncThunk(
         }
     }
 );
+
+export const deletePosts = createAsyncThunk(
+    'posts/deletePosts',
+    async ({ id, token }, { rejectWithValue }) => {
+        try {
+            const response = await apiDeletePosts(id, token);
+            return response;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Something went wrong');
+        }
+    }
+);
+
+export const createComment = createAsyncThunk('posts/comments', async ({ description, post_id, token }, { rejectWithValue }) => {
+    try {
+        const response = await apiCreateComments(description, post_id, token);
+        return response;
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
+});
 
 const postsSlice = createSlice({
     name: 'posts',

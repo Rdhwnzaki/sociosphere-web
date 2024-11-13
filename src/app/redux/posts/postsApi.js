@@ -26,6 +26,43 @@ export const createPosts = async (formData, token) => {
     } catch (error) {
         console.error(error);
         toast.error(error.response?.data?.message || 'Something went wrong');
-        throw error;  // Optional: rethrow to handle in calling function if needed
+        throw error;
     }
 };
+
+export const deletePosts = async (id, token) => {
+    try {
+        const response = await axios.delete(`${baseURL}/api/posts/${id}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const message = response.data?.message || 'Post deleted successfully';
+        toast.success(message);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        const errorMessage = error.response?.data?.message || 'Something went wrong';
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+    }
+};
+
+export const createComments = async (description, post_id, token) => {
+    try {
+        const response = await axios.post(`${baseURL}/api/comments`, description, post_id, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        toast.success(response.data.message)
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+        return response.data
+    } catch (error) {
+        console.error(error)
+        toast.error(error.response?.data?.message || 'Something went wrong');
+        throw error;
+    }
+}
